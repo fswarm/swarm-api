@@ -1,5 +1,0 @@
-# BioBot Swarm Management API - Requirements
-fastapi==0.115.12
-uvicorn==0.34.2
-pydantic==2.11.4
-python-dateutil==2.9.0.post0
