@@ -154,3 +154,6 @@ logs/
 # Sensitive API documentation and production configs
 customer_api_keys.md
 production_config.md
+
+# Local detailed documentation
+README_DETAILED.md

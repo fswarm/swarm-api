@@ -1,48 +1,92 @@
-# Swarm & Robots API Documentation
+# BioBot Swarm Management API# Swarm & Robots API Documentation
 
-A comprehensive FastAPI backend for managing robot swarms and individual robots. This API provides complete CRUD operations, real-time telemetry tracking, and swarm coordination capabilities. Built with FastAPI for high performance and automatic API documentation.
 
-## 🚀 Key Features
 
-- **🤖 Robot Management**: Complete lifecycle management of individual robots
-- **🔗 Swarm Coordination**: Group robots into swarms for coordinated operations  
-- **📡 Real-time Telemetry**: Track robot position, battery, status, and communication
-- **🔄 Dynamic Assignment**: Assign/reassign robots between swarms on the fly
+A FastAPI backend for managing autonomous biobot swarms with real-time telemetry and geographic positioning.A comprehensive FastAPI backend for managing robot swarms and individual robots. This API provides complete CRUD operations, real-time telemetry tracking, and swarm coordination capabilities. Built with FastAPI for high performance and automatic API documentation.
+
+
+
+## Features## 🚀 Key Features
+
+
+
+- 🔐 **Secure Authentication** - API key-based access control- **🤖 Robot Management**: Complete lifecycle management of individual robots
+
+- 🌍 **Geographic Positioning** - Latitude/longitude/altitude coordinates  - **🔗 Swarm Coordination**: Group robots into swarms for coordinated operations  
+
+- 📊 **Real-time Telemetry** - Live biobot status monitoring- **📡 Real-time Telemetry**: Track robot position, battery, status, and communication
+
+- 🎯 **Swarm Organization** - Group biobots into specialized missions- **🔄 Dynamic Assignment**: Assign/reassign robots between swarms on the fly
+
 - **💾 In-Memory Storage**: Zero-configuration development environment
-- **📚 Auto Documentation**: Interactive API docs with Swagger UI
+
+## Quick Start- **📚 Auto Documentation**: Interactive API docs with Swagger UI
+
 - **🌐 CORS Enabled**: Ready for web-based frontends and cross-origin requests
 
-## 📋 Table of Contents
+```bash
+
+# Install dependencies## 📋 Table of Contents
+
+pip install -r requirements_minimal.txt
 
 - [Quick Start](#-quick-start)
-- [API Overview](#-api-overview)
-- [Authentication](#-authentication)
-- [Health Check](#-health-check)
-- [Swarms API](#-swarms-api)
-- [Robots API](#-robots-api)
-- [Actions API](#-actions-api)
-- [Data Models](#-data-models)
-- [Error Handling](#-error-handling)
-- [Demo Data](#-demo-data)
-- [Development Notes](#-development-notes)
 
-## 🏃 Quick Start
+# Run the API- [API Overview](#-api-overview)
+
+python fastapi_swarms_backend.py- [Authentication](#-authentication)
+
+- [Health Check](#-health-check)
+
+# Access documentation- [Swarms API](#-swarms-api)
+
+open http://localhost:8000/docs- [Robots API](#-robots-api)
+
+```- [Actions API](#-actions-api)
+
+- [Data Models](#-data-models)
+
+## API Endpoints- [Error Handling](#-error-handling)
+
+- [Demo Data](#-demo-data)
+
+- `GET /swarms` - List all swarms- [Development Notes](#-development-notes)
+
+- `GET /biobots` - List all biobots
+
+- `POST /biobots` - Create new biobot## 🏃 Quick Start
+
+- `POST /biobots/{id}/telemetry` - Update biobot data
 
 ### Prerequisites
 
+## Authentication
+
 ```bash
-# Python 3.8+ required
-python --version
 
-# Install required dependencies
+Include your API key in requests:# Python 3.8+ required
+
+```bashpython --version
+
+curl -H "Authorization: Bearer your-api-key" http://localhost:8000/swarms
+
+```# Install required dependencies
+
 pip install fastapi uvicorn pydantic
-```
 
-### Installation & Setup
+## Deployment```
 
-1. **Clone or download the project**
+
+
+Ready for Docker, Heroku, and other platforms with included `Dockerfile` and `Procfile`.### Installation & Setup
+
+
+
+---1. **Clone or download the project**
+
 2. **Install dependencies** (see above)
-3. **Run the server**:
+
+**Built for autonomous biobot management and coordination**3. **Run the server**:
 
 ```bash
 # Option 1: Direct execution (recommended for development)
