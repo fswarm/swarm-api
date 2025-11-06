@@ -32,11 +32,18 @@ def serve_documentation():
     # Create a custom handler that serves the docs as index
     class CustomHandler(http.server.SimpleHTTPRequestHandler):
         def end_headers(self):
-            # Add CORS headers to allow API requests
+            # Add comprehensive CORS headers
             self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
+            self.send_header('Access-Control-Allow-Headers', '*')
+            self.send_header('Access-Control-Allow-Credentials', 'true')
+            self.send_header('Access-Control-Max-Age', '3600')
             super().end_headers()
+            
+        def do_OPTIONS(self):
+            # Handle preflight requests
+            self.send_response(200)
+            self.end_headers()
             
         def do_GET(self):
             # Serve the documentation as index page

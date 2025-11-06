@@ -192,15 +192,18 @@ app.openapi = custom_openapi
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://swarm-api-smzv.onrender.com",  # Replace with your actual domain
-        "https://app.swarm-api-smzv.onrender.com",  # Your web application domain
-        "http://localhost:3000",  # For local development
+        "https://swarm-api-smzv.onrender.com",  # Production domain
+        "https://app.swarm-api-smzv.onrender.com",  # Web application domain
+        "http://localhost:3000",  # React dev server
         "http://localhost:8080",  # Alternative local port
+        "http://localhost:8888",  # Documentation server (serve_docs.py)
+        "http://127.0.0.1:8888",  # Documentation server (alternative)
         "null",  # Allow local file:// protocol (for offline Swagger docs)
+        "*",  # Allow all origins for development (remove in production if needed)
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    allow_headers=["*"],  # Allow all headers
 )
 
 
