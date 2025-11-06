@@ -74,7 +74,7 @@ if ENV_API_KEYS:
 
 # Security settings - Production Configuration  
 REQUIRE_API_KEY = True  # Always require API key in production
-security = HTTPBearer(auto_error=True)  # Auto error for missing auth
+security = HTTPBearer(auto_error=True, description="Enter your API key in the Authorization header")
 
 # ----------------------------
 # API Key Authentication
@@ -159,6 +159,35 @@ app = FastAPI(
     redoc_url=None      # Disables /redoc (optional)
 )
 
+# Custom OpenAPI schema to remove example from security scheme
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    from fastapi.openapi.utils import get_openapi
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Customize the security scheme to remove the example
+    if "components" in openapi_schema and "securitySchemes" in openapi_schema["components"]:
+        for scheme_name, scheme in openapi_schema["components"]["securitySchemes"].items():
+            if scheme.get("type") == "http" and scheme.get("scheme") == "bearer":
+                # Remove any example and update description
+                scheme["bearerFormat"] = "API Key"
+                scheme["description"] = "Enter your API key in the Authorization header"
+                # Remove any example keys
+                if "example" in scheme:
+                    del scheme["example"]
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
 # --- Production CORS settings ---
 app.add_middleware(
     CORSMiddleware,
@@ -167,6 +196,7 @@ app.add_middleware(
         "https://app.yourdomain.com",  # Your web application domain
         "http://localhost:3000",  # For local development
         "http://localhost:8080",  # Alternative local port
+        "null",  # Allow local file:// protocol (for offline Swagger docs)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],

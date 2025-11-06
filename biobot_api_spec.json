@@ -2038,7 +2038,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "API Key",
-        "description": "Enter your API key (e.g., biobot-alpha-2025-xk9f)"
+        "description": "Enter your API key in the Authorization header"
       }
     }
   },

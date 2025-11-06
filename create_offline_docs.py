@@ -50,7 +50,7 @@ def create_offline_swagger():
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "API Key",
-            "description": "Enter your API key (e.g., biobot-alpha-2025-xk9f)"
+            "description": "Enter your API key in the Authorization header"
         }
     }
     
@@ -258,11 +258,17 @@ def create_offline_swagger():
     print("\n📁 Generated files:")
     print("  📄 biobot_swagger_offline.html - Interactive documentation (open in browser)")
     print("  📄 biobot_api_spec.json - OpenAPI specification (for reference)")
-    print("\n🚀 Usage:")
-    print("  1. Share 'biobot_swagger_offline.html' with customers")
-    print("  2. They can open it in any web browser")
-    print("  3. Click 'Authorize' and enter their API key")
-    print("  4. Test endpoints directly against your live API!")
+    print("\n🚀 Usage Options:")
+    print("  📋 Option 1 - Direct File Access:")
+    print("    1. Open 'biobot_swagger_offline.html' directly in browser")
+    print("    2. Click 'Authorize' and enter API key")
+    print("    3. Test endpoints against live API")
+    print("  ")
+    print("  🌐 Option 2 - Local Server (Recommended for CORS issues):")
+    print("    1. Run: python serve_docs.py")
+    print("    2. Opens automatically at http://localhost:8888")
+    print("    3. No CORS issues, full functionality")
+    print("\n⚠️  If you see CORS errors with Option 1, use Option 2!")
     print("\n🔑 Sample API keys to share with customers:")
     print("  - biobot-alpha-2025-xk9f (Read/Write)")
     print("  - biobot-beta-2025-m7p3 (Read Only)")
