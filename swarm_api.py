@@ -141,26 +141,22 @@ app = FastAPI(
     title="BioBot Swarm Management API",
     version="1.0.0",
     description=(
-        "🤖 **Professional BioBot Swarm Management API**\n\n"
+        " **Professional BioBot Swarm Management API**\n\n"
         "A secure, production-ready API for managing autonomous biobot swarms and individual biobots. "
-        "Perfect for real-time monitoring, coordination, and control of biobot operations.\n\n"
-        "**Features:**\n"
-        "- 🔐 Secure API key authentication\n"
-        "- 🌍 Geographic positioning (latitude/longitude/altitude)\n"
-        "- 📊 Real-time telemetry and status monitoring\n"
-        "- 🎯 Mission-based swarm organization\n"
-        "- ⚡ High-performance in-memory operations\n\n"
+        
         "**Authentication Required:** All endpoints require a valid API key in the Authorization header.\n"
         "Contact support to obtain your API key."
     ),
     contact={
         "name": "BioBot API Support",
-        "email": "support@biobot-api.com"
+       
     },
     license_info={
-        "name": "Commercial License",
-        "url": "https://biobot-api.com/license"
-    }
+        
+    },
+    # Disable automatic documentation endpoints for production
+    docs_url=None,      # Disables /docs
+    redoc_url=None      # Disables /redoc (optional)
 )
 
 # --- Production CORS settings ---
@@ -266,13 +262,42 @@ class BioBot(BioBotBase):
 
 
 # ----------------------------
+# Event Models
+# ----------------------------
+class EventSeverity(str, Enum):
+    info = "info"
+    warning = "warning"
+    error = "error"
+    critical = "critical"
+
+
+class EventBase(BaseModel):
+    event_type: str = Field(..., min_length=1, max_length=50, strip_whitespace=True)
+    description: str = Field(..., min_length=1, max_length=500)
+    data: Optional[dict] = Field(default_factory=dict, description="Additional event data")
+    severity: EventSeverity = EventSeverity.info
+
+
+class EventCreate(EventBase):
+    pass
+
+
+class Event(EventBase):
+    id: int
+    biobot_id: int
+    timestamp: datetime
+
+
+# ----------------------------
 # In-memory stores (swap with DB later)
 # ----------------------------
 _swarm_store: Dict[int, Swarm] = {}
 _biobot_store: Dict[int, BioBot] = {}
+_event_store: Dict[int, Event] = {}
 
 _next_swarm_id = 1
 _next_biobot_id = 1
+_next_event_id = 1
 
 
 # ----------------------------
@@ -648,11 +673,118 @@ async def unassign_biobot(
 
 
 # ----------------------------
+# Event API Endpoints
+# ----------------------------
+@app.get("/events", response_model=List[Event], tags=["events"])
+async def list_events(
+    biobot_id: Optional[int] = Query(None, description="Filter events by biobot ID"),
+    event_type: Optional[str] = Query(None, description="Filter events by type"),
+    severity: Optional[EventSeverity] = Query(None, description="Filter events by severity"),
+    limit: int = Query(50, ge=1, le=500, description="Maximum number of events"),
+    offset: int = Query(0, ge=0, description="Number of events to skip"),
+    api_key_info: APIKeyInfo = Depends(require_read)
+):
+    """Get list of events with optional filtering."""
+    events = list(_event_store.values())
+    
+    # Apply filters
+    if biobot_id is not None:
+        events = [e for e in events if e.biobot_id == biobot_id]
+    if event_type:
+        events = [e for e in events if event_type.lower() in e.event_type.lower()]
+    if severity:
+        events = [e for e in events if e.severity == severity]
+    
+    # Sort by timestamp (newest first)
+    events.sort(key=lambda x: x.timestamp, reverse=True)
+    
+    # Apply pagination
+    return events[offset:offset + limit]
+
+
+@app.get("/biobots/{biobot_id}/events", response_model=List[Event], tags=["events"])
+async def get_biobot_events(
+    biobot_id: int,
+    event_type: Optional[str] = Query(None, description="Filter events by type"),
+    severity: Optional[EventSeverity] = Query(None, description="Filter events by severity"),
+    limit: int = Query(50, ge=1, le=500, description="Maximum number of events"),
+    offset: int = Query(0, ge=0, description="Number of events to skip"),
+    api_key_info: APIKeyInfo = Depends(require_read)
+):
+    """Get events for a specific biobot."""
+    _require_biobot(biobot_id)  # Ensure biobot exists
+    
+    events = [e for e in _event_store.values() if e.biobot_id == biobot_id]
+    
+    # Apply filters
+    if event_type:
+        events = [e for e in events if event_type.lower() in e.event_type.lower()]
+    if severity:
+        events = [e for e in events if e.severity == severity]
+    
+    # Sort by timestamp (newest first)
+    events.sort(key=lambda x: x.timestamp, reverse=True)
+    
+    # Apply pagination
+    return events[offset:offset + limit]
+
+
+@app.post("/biobots/{biobot_id}/events", response_model=Event, tags=["events"], status_code=201)
+async def create_biobot_event(
+    biobot_id: int,
+    event_data: EventCreate,
+    api_key_info: APIKeyInfo = Depends(require_write)
+):
+    """Create a new event for a specific biobot."""
+    global _next_event_id
+    
+    _require_biobot(biobot_id)  # Ensure biobot exists
+    
+    event = Event(
+        id=_next_event_id,
+        biobot_id=biobot_id,
+        event_type=event_data.event_type,
+        description=event_data.description,
+        data=event_data.data,
+        severity=event_data.severity,
+        timestamp=datetime.utcnow()
+    )
+    
+    _event_store[_next_event_id] = event
+    _next_event_id += 1
+    
+    return event
+
+
+@app.get("/events/{event_id}", response_model=Event, tags=["events"])
+async def get_event(
+    event_id: int,
+    api_key_info: APIKeyInfo = Depends(require_read)
+):
+    """Get a specific event by ID."""
+    if event_id not in _event_store:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return _event_store[event_id]
+
+
+@app.delete("/events/{event_id}", status_code=204, tags=["events"])
+async def delete_event(
+    event_id: int,
+    api_key_info: APIKeyInfo = Depends(require_admin)
+):
+    """Delete a specific event (admin only)."""
+    if event_id not in _event_store:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    del _event_store[event_id]
+
+
+# ----------------------------
 # Demo seed data and startup
 # ----------------------------
 @app.on_event("startup")
 async def _seed_demo():
-    global _next_swarm_id, _next_biobot_id
+    global _next_swarm_id, _next_biobot_id, _next_event_id
     
     # Show production startup status
     total_api_keys = len(API_KEYS)
@@ -965,6 +1097,74 @@ async def _seed_demo():
         )
         _biobot_store[_next_biobot_id] = b12
         _next_biobot_id += 1
+
+        # Create demo events for biobots
+        global _next_event_id
+        
+        # Events for Alpha Leader (b1)
+        e1 = Event(
+            id=_next_event_id,
+            biobot_id=1,
+            event_type="mission_start",
+            description="Started reconnaissance mission in Central Park",
+            data={"mission_id": "recon_001", "location": "Central Park, NYC"},
+            severity=EventSeverity.info,
+            timestamp=datetime.utcnow().replace(hour=9, minute=30)
+        )
+        _event_store[_next_event_id] = e1
+        _next_event_id += 1
+
+        e2 = Event(
+            id=_next_event_id,
+            biobot_id=1,
+            event_type="battery_low",
+            description="Battery level dropped below 20%",
+            data={"battery_level": 15.5, "estimated_runtime": "45 minutes"},
+            severity=EventSeverity.warning,
+            timestamp=datetime.utcnow().replace(hour=14, minute=15)
+        )
+        _event_store[_next_event_id] = e2
+        _next_event_id += 1
+
+        # Events for Alpha Scout (b2)
+        e3 = Event(
+            id=_next_event_id,
+            biobot_id=2,
+            event_type="target_detected",
+            description="Motion detected in sector 7",
+            data={"sector": 7, "confidence": 0.87, "object_type": "human"},
+            severity=EventSeverity.info,
+            timestamp=datetime.utcnow().replace(hour=11, minute=45)
+        )
+        _event_store[_next_event_id] = e3
+        _next_event_id += 1
+
+        # Events for Reserve Echo (b12)
+        e4 = Event(
+            id=_next_event_id,
+            biobot_id=12,
+            event_type="charging_complete",
+            description="Battery charging completed successfully",
+            data={"charge_duration": "2.5 hours", "battery_level": 100},
+            severity=EventSeverity.info,
+            timestamp=datetime.utcnow().replace(hour=8, minute=0)
+        )
+        _event_store[_next_event_id] = e4
+        _next_event_id += 1
+
+        e5 = Event(
+            id=_next_event_id,
+            biobot_id=5,
+            event_type="sensor_malfunction",
+            description="LiDAR sensor showing intermittent readings",
+            data={"sensor": "lidar", "error_rate": 0.23, "recommended_action": "maintenance"},
+            severity=EventSeverity.error,
+            timestamp=datetime.utcnow().replace(hour=13, minute=20)
+        )
+        _event_store[_next_event_id] = e5
+        _next_event_id += 1
+
+        print(f"📊 Demo data loaded: {len(_swarm_store)} swarms, {len(_biobot_store)} biobots, {len(_event_store)} events")
 
 
 # ----------------------------

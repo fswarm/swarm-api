@@ -1,0 +1,52 @@
+graph TD
+    %% BioBot Swarm API Data Structure
+    
+    %% API Layer
+    Client[🌐 Client Application]
+    Auth[🔑 API Key Authentication]
+    API[⚡ FastAPI Backend]
+    
+    %% Data Storage
+    Memory[(💾 In-Memory Storage)]
+    
+    %% Core Entities
+    SwarmStore[📦 Swarms Dictionary]
+    BioBotStore[🤖 BioBots Dictionary]
+    APIKeyStore[🔐 API Keys Dictionary]
+    
+    %% Entity Structures
+    Swarm[🏢 Swarm Entity<br/>• id: int<br/>• name: string<br/>• description: string<br/>• metadata: dict<br/>• created_at: datetime]
+    
+    BioBot[🤖 BioBot Entity<br/>• id: int<br/>• name: string<br/>• status: enum<br/>• position: Position<br/>• heading_deg: float<br/>• battery_pct: float<br/>• swarm_id: int]
+    
+    Position[📍 Position Object<br/>• latitude: float<br/>• longitude: float<br/>• altitude: float]
+    
+    APIKey[🔑 API Key<br/>• key: string<br/>• name: string<br/>• permissions: list<br/>• created_at: datetime]
+    
+    %% Flow Connections
+    Client --> Auth
+    Auth --> API
+    API --> Memory
+    
+    Memory --> SwarmStore
+    Memory --> BioBotStore
+    Memory --> APIKeyStore
+    
+    SwarmStore --> Swarm
+    BioBotStore --> BioBot
+    APIKeyStore --> APIKey
+    
+    BioBot --> Position
+    
+    %% Relationships
+    Swarm -.->|contains| BioBot
+    BioBot -.->|belongs to| Swarm
+    
+    %% Styling
+    classDef entityBox fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef dataBox fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef apiBox fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    
+    class Swarm,BioBot,Position,APIKey entityBox
+    class SwarmStore,BioBotStore,APIKeyStore,Memory dataBox
+    class Client,Auth,API apiBox

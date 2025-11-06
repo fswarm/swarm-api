@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BioBot Swarm API - Data Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .diagram-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .legend {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: inline-block;
+            margin: 5px 15px 5px 0;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .entity { background: #e1f5fe; color: #01579b; }
+        .data { background: #f3e5f5; color: #4a148c; }
+        .api { background: #e8f5e8; color: #1b5e20; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BioBot Swarm API - Data Architecture</h1>
+        
+        <div class="legend">
+            <strong>Legend:</strong>
+            <span class="legend-item entity"><strong>Data Entities</strong></span>
+            <span class="legend-item data"><strong>Storage Layer</strong></span>
+            <span class="legend-item api"><strong>API Layer</strong></span>
+        </div>
+
+        <div class="diagram-section">
+            <div class="section-title"><strong>System Architecture & Data Flow</strong></div>
+            <div class="mermaid">
+graph TD
+    %% BioBot Swarm API Data Structure
+    
+    %% API Layer
+    Client[**Client Application**]
+    Auth[**API Key Authentication**]
+    API[**FastAPI Backend**]
+    
+    %% Data Storage
+    Memory[(**In-Memory Storage**)]
+    
+    %% Core Entities
+    SwarmStore[**Swarms Dictionary**]
+    BioBotStore[**BioBots Dictionary**]
+    EventStore[**Events Dictionary**]
+    APIKeyStore[**API Keys Dictionary**]
+    
+    %% Entity Structures
+    Swarm[**Swarm Entity**<br/>• id: int<br/>• name: string<br/>• description: string<br/>• metadata: dict<br/>• created_at: datetime<br/>• biobots: list]
+    
+    BioBot[**BioBot Entity**<br/>• id: int<br/>• name: string<br/>• status: enum<br/>• position: Position<br/>• heading_deg: float<br/>• battery_pct: float<br/>• swarm_id: int]
+    
+    Position[**Position Object**<br/>• latitude: float<br/>• longitude: float<br/>• altitude: float]
+    
+    Event[**Event Entity**<br/>• id: int<br/>• biobot_id: int<br/>• event_type: string<br/>• description: string<br/>• data: dict<br/>• timestamp: datetime<br/>• severity: enum]
+    
+    APIKey[**API Key**<br/>• key: string<br/>• name: string<br/>• permissions: list<br/>• created_at: datetime]
+    
+    %% Flow Connections
+    Client --> Auth
+    Auth --> API
+    API --> Memory
+    
+    Memory --> SwarmStore
+    Memory --> BioBotStore
+    Memory --> EventStore
+    Memory --> APIKeyStore
+    
+    SwarmStore --> Swarm
+    BioBotStore --> BioBot
+    EventStore --> Event
+    APIKeyStore --> APIKey
+    
+    BioBot --> Position
+    BioBot --> Event
+    
+    %% Relationships
+    Swarm -.->|contains| BioBot
+    BioBot -.->|belongs to| Swarm
+    BioBot -.->|generates| Event
+    
+    %% Styling
+    classDef entityBox fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef dataBox fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef apiBox fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    
+    class Swarm,BioBot,Position,Event,APIKey entityBox
+    class SwarmStore,BioBotStore,EventStore,APIKeyStore,Memory dataBox
+    class Client,Auth,API apiBox
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <div class="section-title"><strong>Entity Relationship Diagram</strong></div>
+            <div class="mermaid">
+erDiagram
+    SWARM ||--o{ BIOBOT : contains
+    BIOBOT }|--|| POSITION : has
+    BIOBOT ||--o{ EVENT : generates
+    API_KEY ||--o{ REQUEST : authenticates
+    
+    SWARM {
+        int id PK
+        string name
+        string description
+        dict metadata
+        datetime created_at
+        list biobots
+    }
+    
+    BIOBOT {
+        int id PK
+        string name
+        enum status
+        float heading_deg
+        float battery_pct
+        dict metadata
+        int swarm_id FK
+        datetime last_seen
+    }
+    
+    POSITION {
+        float latitude
+        float longitude 
+        float altitude
+    }
+    
+    EVENT {
+        int id PK
+        int biobot_id FK
+        string event_type
+        string description
+        dict data
+        datetime timestamp
+        enum severity
+    }
+    
+    API_KEY {
+        string key PK
+        string name
+        list permissions
+        datetime created_at
+    }
+    
+    REQUEST {
+        string method
+        string endpoint
+        string api_key FK
+        dict headers
+        dict body
+    }
+            </div>
+        </div>
+
+        <div class="diagram-section">
+            <div class="section-title"><strong>API Endpoints Overview</strong></div>
+            <div class="mermaid">
+graph LR
+    API[**API Root**<br/>https://swarm-api-smzv.onrender.com]
+    
+    %% Health & Docs
+    API --> Health[**GET /health**<br/>System Status]
+    API --> Docs[**GET /docs**<br/>Interactive API Docs]
+    
+    %% Swarm Endpoints
+    API --> SwarmList[**GET /swarms**<br/>List All Swarms]
+    API --> SwarmCreate[**POST /swarms**<br/>Create New Swarm]
+    API --> SwarmGet[**GET /swarms/{id}**<br/>Get Specific Swarm]
+    API --> SwarmUpdate[**POST /swarms/{id}**<br/>Update Swarm]
+    API --> SwarmDelete[**DELETE /swarms/{id}**<br/>Delete Swarm]
+    
+    %% BioBot Endpoints
+    API --> BioBotList[**GET /biobots**<br/>List All BioBots]
+    API --> BioBotCreate[**POST /biobots**<br/>Create New BioBot]
+    API --> BioBotGet[**GET /biobots/{id}**<br/>Get Specific BioBot]
+    API --> BioBotUpdate[**POST /biobots/{id}**<br/>Update BioBot]
+    API --> BioBotDelete[**DELETE /biobots/{id}**<br/>Delete BioBot]
+    
+    %% Event Endpoints
+    API --> EventList[**GET /events**<br/>List All Events]
+    API --> BioBotEvents[**GET /biobots/{id}/events**<br/>Get BioBot Events]
+    API --> EventCreate[**POST /biobots/{id}/events**<br/>Create Event]
+    
+    %% Actions
+    API --> Telemetry[**POST /biobots/{id}/telemetry**<br/>Update Telemetry]
+    API --> Assign[**POST /swarms/{swarm_id}/assign/{biobot_id}**<br/>Assign to Swarm]
+    API --> Unassign[**POST /swarms/unassign/{biobot_id}**<br/>Unassign from Swarm]
+    
+    %% Styling
+    classDef endpoint fill:#fff2cc,stroke:#d6b656,stroke-width:2px
+    classDef action fill:#d4edda,stroke:#155724,stroke-width:2px
+    classDef info fill:#cce5ff,stroke:#0066cc,stroke-width:2px
+    classDef event fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class SwarmList,SwarmCreate,SwarmGet,SwarmUpdate,SwarmDelete,BioBotList,BioBotCreate,BioBotGet,BioBotUpdate,BioBotDelete endpoint
+    class Telemetry,Assign,Unassign action
+    class Health,Docs info
+    class EventList,BioBotEvents,EventCreate event
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+</body>
+</html>

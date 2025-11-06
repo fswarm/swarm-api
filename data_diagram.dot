@@ -1,0 +1,65 @@
+digraph BioBotAPI {
+    // Graph settings
+    rankdir=TB;
+    bgcolor="#f8f9fa";
+    node [fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=9];
+    
+    // Subgraph for API Layer
+    subgraph cluster_api {
+        label="🌐 API Layer";
+        style=filled;
+        color="#e8f5e8";
+        
+        client [label="📱 Client\nApplications", shape=box, style=filled, fillcolor="#d4edda"];
+        auth [label="🔑 Authentication\nMiddleware", shape=box, style=filled, fillcolor="#fff3cd"];
+        fastapi [label="⚡ FastAPI\nBackend", shape=box, style=filled, fillcolor="#cce5ff"];
+    }
+    
+    // Subgraph for Data Layer  
+    subgraph cluster_storage {
+        label="💾 Data Storage Layer";
+        style=filled;
+        color="#f3e5f5";
+        
+        memory [label="🧠 In-Memory\nDictionaries", shape=cylinder, style=filled, fillcolor="#e1bee7"];
+        
+        subgraph cluster_entities {
+            label="📊 Data Entities";
+            style=filled;
+            color="#fff2cc";
+            
+            swarms [label="🏢 Swarms\nDictionary", shape=folder, style=filled, fillcolor="#fff3cd"];
+            biobots [label="🤖 BioBots\nDictionary", shape=folder, style=filled, fillcolor="#fff3cd"];
+            apikeys [label="🔐 API Keys\nDictionary", shape=folder, style=filled, fillcolor="#fff3cd"];
+        }
+    }
+    
+    // Entity detail boxes
+    swarm_entity [label="🏢 Swarm Entity\n• id: int\n• name: string\n• description: string\n• metadata: dict\n• created_at: datetime\n• biobots: list", shape=record, style=filled, fillcolor="#e1f5fe"];
+    
+    biobot_entity [label="🤖 BioBot Entity\n• id: int\n• name: string\n• status: enum\n• position: Position\n• heading_deg: float\n• battery_pct: float\n• swarm_id: int\n• last_seen: datetime", shape=record, style=filled, fillcolor="#e8f5e8"];
+    
+    position_entity [label="📍 Position Object\n• latitude: float\n• longitude: float\n• altitude: float", shape=record, style=filled, fillcolor="#fff3cd"];
+    
+    apikey_entity [label="🔑 API Key\n• key: string\n• name: string\n• permissions: list\n• created_at: datetime", shape=record, style=filled, fillcolor="#ffebee"];
+    
+    // Flow connections
+    client -> auth [label="HTTP Request\nw/ Bearer Token"];
+    auth -> fastapi [label="Validated\nRequest"];
+    fastapi -> memory [label="CRUD\nOperations"];
+    
+    memory -> swarms;
+    memory -> biobots;
+    memory -> apikeys;
+    
+    swarms -> swarm_entity;
+    biobots -> biobot_entity;
+    apikeys -> apikey_entity;
+    
+    biobot_entity -> position_entity [label="contains", style=dashed];
+    
+    // Relationships
+    swarm_entity -> biobot_entity [label="1:n\ncontains", color="blue", style=bold];
+    biobot_entity -> swarm_entity [label="n:1\nbelongs to", color="green", style=dashed];
+}
