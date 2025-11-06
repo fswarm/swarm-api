@@ -192,8 +192,8 @@ app.openapi = custom_openapi
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://yourdomain.com",  # Replace with your actual domain
-        "https://app.yourdomain.com",  # Your web application domain
+        "https://swarm-api-smzv.onrender.com",  # Replace with your actual domain
+        "https://app.swarm-api-smzv.onrender.com",  # Your web application domain
         "http://localhost:3000",  # For local development
         "http://localhost:8080",  # Alternative local port
         "null",  # Allow local file:// protocol (for offline Swagger docs)
