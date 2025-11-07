@@ -37,16 +37,12 @@ def create_offline_swagger():
         {
             "url": "https://swarm-api-smzv.onrender.com",
             "description": "Production API Server"
-        },
-        {
-            "url": "http://localhost:8000",
-            "description": "Local Development Server"
         }
     ]
     
     # Add security scheme information
     openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
+        "HTTPBearer": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "API Key",
@@ -55,7 +51,7 @@ def create_offline_swagger():
     }
     
     # Add global security requirement
-    openapi_schema["security"] = [{"BearerAuth": []}]
+    openapi_schema["security"] = [{"HTTPBearer": []}]
     
     # Save OpenAPI JSON for reference
     with open("biobot_api_spec.json", "w", encoding="utf-8") as f:
@@ -71,56 +67,18 @@ def create_offline_swagger():
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
     <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.9.0/favicon-32x32.png" sizes="32x32" />
     <style>
-        html {{
-            box-sizing: border-box;
-            overflow: -moz-scrollbars-vertical;
-            overflow-y: scroll;
-        }}
-        
-        *, *:before, *:after {{
-            box-sizing: inherit;
-        }}
-        
         body {{
-            margin:0;
-            background: #fafafa;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        }}
-        
-        .header {{
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        
-        .header h1 {{
             margin: 0;
-            font-size: 28px;
+            font-family: Arial, sans-serif;
         }}
         
-        .header p {{
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-        }}
-        
-        .info-banner {{
-            background: #3498db;
-            color: white;
-            padding: 15px;
+        .simple-header {{
+            background: #f8f9fa;
+            padding: 10px 20px;
             text-align: center;
-            font-weight: bold;
-        }}
-        
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
-        
-        #swagger-ui {{
-            max-width: 1200px;
-            margin: 0 auto;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+            color: #6c757d;
         }}
         
         .swagger-ui .topbar {{
@@ -129,13 +87,8 @@ def create_offline_swagger():
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🤖 BioBot Swarm Management API</h1>
-        <p>Interactive API Documentation - Test Live Endpoints</p>
-    </div>
-    
-    <div class="info-banner">
-        📡 Live API: https://swarm-api-smzv.onrender.com | 🔑 Use "Authorize" button to add your API key
+    <div class="simple-header">
+        API Documentation - Enter your API key using the "Authorize" button
     </div>
     
     <div id="swagger-ui"></div>
@@ -164,89 +117,12 @@ def create_offline_swagger():
                 defaultModelExpandDepth: 1,
                 docExpansion: "list",
                 operationsSorter: "method",
-                tryItOutEnabled: true,
-                requestInterceptor: function(request) {{
-                    console.log('🚀 API Request:', request);
-                    
-                    // Add user-agent for tracking
-                    request.headers['User-Agent'] = 'BioBot-Swagger-Offline-Client/1.0';
-                    
-                    return request;
-                }},
-                responseInterceptor: function(response) {{
-                    console.log('📡 API Response:', response);
-                    return response;
-                }},
-                onComplete: function() {{
-                    console.log('✅ Swagger UI loaded successfully');
-                    
-                    // Add custom styling
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        .swagger-ui .scheme-container {{
-                            background: #f8f9fa;
-                            border: 1px solid #e9ecef;
-                            padding: 15px;
-                            margin: 20px 0;
-                            border-radius: 5px;
-                        }}
-                        
-                        .swagger-ui .info .title {{
-                            color: #2c3e50;
-                        }}
-                        
-                        .swagger-ui .info .description {{
-                            color: #34495e;
-                        }}
-                        
-                        .swagger-ui .opblock.opblock-get .opblock-summary-method {{
-                            background: #27ae60;
-                        }}
-                        
-                        .swagger-ui .opblock.opblock-post .opblock-summary-method {{
-                            background: #e67e22;
-                        }}
-                        
-                        .swagger-ui .opblock.opblock-delete .opblock-summary-method {{
-                            background: #e74c3c;
-                        }}
-                    `;
-                    document.head.appendChild(style);
-                }}
+                tryItOutEnabled: true
             }});
-            
-            // Auto-fill API key if available in localStorage
-            const savedApiKey = localStorage.getItem('biobot_api_key');
-            if (savedApiKey) {{
-                console.log('🔑 Found saved API key, auto-filling...');
-                setTimeout(() => {{
-                    try {{
-                        ui.preauthorizeApiKey('BearerAuth', savedApiKey);
-                    }} catch (e) {{
-                        console.log('Could not auto-authorize:', e);
-                    }}
-                }}, 1000);
-            }}
             
             window.ui = ui;
         }};
-        
-        // Save API key to localStorage when user authorizes
-        window.addEventListener('message', function(event) {{
-            if (event.data && event.data.type === 'swagger-ui-auth' && event.data.token) {{
-                localStorage.setItem('biobot_api_key', event.data.token);
-                console.log('🔑 API key saved for future sessions');
-            }}
-        }});
     </script>
-    
-    <footer style="background: #34495e; color: white; padding: 20px; text-align: center; margin-top: 40px;">
-        <p>🤖 BioBot Swarm API - Offline Documentation</p>
-        <p style="font-size: 14px; opacity: 0.8;">
-            Generated on {json.dumps(openapi_schema.get('info', {}).get('version', 'Unknown'))} | 
-            <a href="https://swarm-api-smzv.onrender.com/docs" style="color: #3498db;">View Live Docs</a>
-        </p>
-    </footer>
 </body>
 </html>"""
     

@@ -2034,7 +2034,7 @@
       }
     },
     "securitySchemes": {
-      "BearerAuth": {
+      "HTTPBearer": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "API Key",
@@ -2046,15 +2046,11 @@
     {
       "url": "https://swarm-api-smzv.onrender.com",
       "description": "Production API Server"
-    },
-    {
-      "url": "http://localhost:8000",
-      "description": "Local Development Server"
     }
   ],
   "security": [
     {
-      "BearerAuth": []
+      "HTTPBearer": []
     }
   ]
 }
